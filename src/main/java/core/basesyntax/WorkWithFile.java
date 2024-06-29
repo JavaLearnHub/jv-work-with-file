@@ -1,53 +1,69 @@
 package core.basesyntax;
 
+import lombok.SneakyThrows;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
+import static core.basesyntax.ProductOperation.*;
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+
 public class WorkWithFile {
+    private static final String DATA_SEPARATOR = ",";
+    private static final String EMPTY_STRING = "";
+    private static final int INDEX_OF_PRODUCT_OPERATION = 0;
+    private static final int INDEX_OF_PRODUCT_QUANTITY = 1;
+
+
+    @SneakyThrows(IOException.class)
     public void getStatistic(String fromFileName, String toFileName) {
         File sourceFile = new File(fromFileName);
+        List<String> fileRows = Files.readAllLines(sourceFile.toPath());
         File destinationFile = new File(toFileName);
-        List<String> statisticDataStrings;
 
-        try{
-            destinationFile.createNewFile();
-        } catch (IOException e){
-            throw new RuntimeException("Can't create a file", e);
-        }
+        destinationFile.createNewFile();
 
-        try {
-            statisticDataStrings = Files.readAllLines(sourceFile.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException("Can't read file", e);
-        }
+        int buyQuantity = 0;
+        int supplyQuantity = 0;
+        int resultQuantity;
 
-        for (String string : statisticDataStrings) {
+        for (String fileRow : fileRows) {
+            String[] productInfo = fileRow.split(DATA_SEPARATOR);
 
-            String[] dataString = string.split(",");
-            if (dataString[0].equals("supply")) {
-                StatisticData.SUPPLY.setData(StatisticData.SUPPLY.getData() + Integer.valueOf(dataString[1]));
+            ProductOperation productOperation = ProductOperation.getOperation(productInfo[INDEX_OF_PRODUCT_OPERATION]);
+            int quantity = Integer.parseInt(productInfo[INDEX_OF_PRODUCT_QUANTITY]);
+
+            switch (productOperation) {
+                case BUY -> buyQuantity += quantity;
+                case SUPPLY -> supplyQuantity += quantity;
+                default -> throw new RuntimeException("Operation: " + productOperation + " not supported");
             }
-            else StatisticData.BUY.setData(StatisticData.BUY.getData() + Integer.valueOf(dataString[1]));
         }
 
-        StatisticData.RESULT.setData(StatisticData.SUPPLY.getData()-StatisticData.BUY.getData());
-        try{
-            if (Files.exists(destinationFile.toPath())) {
-                Files.write(destinationFile.toPath(), "".getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
-            }
+        resultQuantity = supplyQuantity - buyQuantity;
 
-            for(StatisticData data : StatisticData.values()){
-
-                String dataToWrite = data.toString().toLowerCase() + "," + data.getData() + "\n";
-                Files.write(destinationFile.toPath(), dataToWrite.getBytes(), StandardOpenOption.APPEND);
-
-                data.setData(0);
-            }
-        }catch (IOException e){
-                throw new RuntimeException("Can't write data(string) to file", e);
+        if (Files.exists(destinationFile.toPath())) {
+            Files.write(destinationFile.toPath(), EMPTY_STRING.getBytes(), TRUNCATE_EXISTING);
         }
+
+        StringBuilder dataToWrite = new StringBuilder();
+        dataToWrite.append(ProductOperation.getValue(SUPPLY))
+                .append(DATA_SEPARATOR)
+                .append(supplyQuantity)
+                .append(System.lineSeparator())
+                .append(ProductOperation.getValue(BUY))
+                .append(DATA_SEPARATOR)
+                .append(buyQuantity)
+                .append(System.lineSeparator())
+                .append(ProductOperation.getValue(RESULT))
+                .append(DATA_SEPARATOR)
+                .append(resultQuantity);
+
+        String dataToWriteResult = dataToWrite.toString();
+        Files.write(destinationFile.toPath(), dataToWriteResult.getBytes(), APPEND);
+
     }
 }

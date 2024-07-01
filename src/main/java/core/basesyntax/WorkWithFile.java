@@ -49,16 +49,16 @@ public class WorkWithFile {
             Files.write(destinationFile.toPath(), EMPTY_STRING.getBytes(), TRUNCATE_EXISTING);
         }
 
-        StringBuilder dataToWrite = new StringBuilder();
-        dataToWrite.append(ProductOperation.getValue(SUPPLY))
+        StringBuilder dataToWrite = new StringBuilder()
+                .append(SUPPLY.getValue())
                 .append(DATA_SEPARATOR)
                 .append(supplyQuantity)
                 .append(System.lineSeparator())
-                .append(ProductOperation.getValue(BUY))
+                .append(BUY.getValue())
                 .append(DATA_SEPARATOR)
                 .append(buyQuantity)
                 .append(System.lineSeparator())
-                .append(ProductOperation.getValue(RESULT))
+                .append(RESULT.getValue())
                 .append(DATA_SEPARATOR)
                 .append(resultQuantity);
 

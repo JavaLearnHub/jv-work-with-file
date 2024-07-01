@@ -11,8 +11,8 @@ public enum ProductOperation {
         this.value = value;
     }
 
-    static String getValue(ProductOperation op) {
-        return op.value;
+    public String getValue() {
+        return value;
     }
 
     static ProductOperation getOperation(String value) {
